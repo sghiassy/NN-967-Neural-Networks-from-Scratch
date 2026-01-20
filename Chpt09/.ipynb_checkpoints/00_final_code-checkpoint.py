@@ -21,11 +21,6 @@ class Layer_Dense:
         self.dbiases = np.sum(dvalues, axis=0, keepdims=True)
         self.dinputs = np.dot(dvalues, self.weights.T)
 
-    def __repr__(self):
-        weights_str = np.array2string(self.weights, precision=6, suppress_small=True)
-        biases_str = np.array2string(self.biases, precision=6, suppress_small=True)
-        return f"Layer_Dense(\n  weights={weights_str},\n  biases={biases_str}\n)"
-
 
 class Activation_ReLU:
     def forward(self, inputs):
@@ -35,21 +30,6 @@ class Activation_ReLU:
     def backward(self, dvalues):
         self.dinputs = dvalues.copy()
         self.dinputs[self.inputs <= 0] = 0
-
-    def __repr__(self):
-        parts = []
-        if hasattr(self, "inputs") and isinstance(self.inputs, np.ndarray):
-            parts.append(f"inputs.shape={self.inputs.shape}")
-        if hasattr(self, "output") and isinstance(self.output, np.ndarray):
-            parts.append(f"output.shape={self.output.shape}")
-        if hasattr(self, "dinputs") and isinstance(self.dinputs, np.ndarray):
-            parts.append(f"dinputs.shape={self.dinputs.shape}")
-        inner = ", ".join(parts)
-        return (
-            f"{self.__class__.__name__}({inner})"
-            if inner
-            else f"{self.__class__.__name__}()"
-        )
 
 
 class Activation_Softmax:
@@ -67,30 +47,12 @@ class Activation_Softmax:
             jacobian_matrix = np.diaflat(single_output) - np.dot(single_output, single_output.T)
             self.dinputs[index] = np.dot(jacobian_matrix, single_dvalues)
 
-    def __repr__(self):
-        parts = []
-        if hasattr(self, "inputs") and isinstance(self.inputs, np.ndarray):
-            parts.append(f"inputs.shape={self.inputs.shape}")
-        if hasattr(self, "output") and isinstance(self.output, np.ndarray):
-            parts.append(f"output.shape={self.output.shape}")
-        if hasattr(self, "dinputs") and isinstance(self.dinputs, np.ndarray):
-            parts.append(f"dinputs.shape={self.dinputs.shape}")
-        inner = ", ".join(parts)
-        return (
-            f"{self.__class__.__name__}({inner})"
-            if inner
-            else f"{self.__class__.__name__}()"
-        )
-
 
 class Loss:
     def calculate(self, output, y):
         sample_losses = self.forward(output, y)
         data_loss = np.mean(sample_losses)
         return data_loss
-
-    def __repr__(self):
-        return f"{self.__class__.__name__}()"
 
 
 class Loss_CategoricalCrossEntropy(Loss):
@@ -115,17 +77,6 @@ class Loss_CategoricalCrossEntropy(Loss):
         self.dinputs = -y_true / dvalues
         self.dinputs = self.dinputs / samples
 
-    def __repr__(self):
-        parts = []
-        if hasattr(self, "dinputs") and isinstance(self.dinputs, np.ndarray):
-            parts.append(f"dinputs.shape={self.dinputs.shape}")
-        inner = ", ".join(parts)
-        return (
-            f"{self.__class__.__name__}({inner})"
-            if inner
-            else f"{self.__class__.__name__}()"
-        )
-
 
 class Activation_Softmax_Loss_CategroicalCrossEntropy():
     def __init__(self):
@@ -145,17 +96,6 @@ class Activation_Softmax_Loss_CategroicalCrossEntropy():
         self.dinputs = dvalues.copy()
         self.dinputs[range(samples), y_true] -= 1
         self.dinputs = self.dinputs / samples
-
-    def __repr__(self):
-        parts = []
-        if hasattr(self, "output") and isinstance(self.output, np.ndarray):
-            parts.append(f"output.shape={self.output.shape}")
-        if hasattr(self, "dinputs") and isinstance(self.dinputs, np.ndarray):
-            parts.append(f"dinputs.shape={self.dinputs.shape}")
-        parts.append(f"activation={self.activation.__class__.__name__}")
-        parts.append(f"loss={self.loss.__class__.__name__}")
-        inner = ", ".join(parts)
-        return f"{self.__class__.__name__}({inner})"
 
 
 X, y = spiral_data(samples=100, classes=3)
